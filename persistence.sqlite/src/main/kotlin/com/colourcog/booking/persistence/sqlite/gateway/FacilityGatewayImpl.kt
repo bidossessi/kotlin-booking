@@ -1,15 +1,15 @@
 package com.colourcog.booking.persistence.sqlite.gateway
 
 import com.colourcog.booking.domain.entity.Facility
+import com.colourcog.booking.domain.errors.NoSuchFacilityException
 import com.colourcog.booking.domain.gateway.FacilitiesQuery
 import com.colourcog.booking.domain.gateway.FacilityGateway
 import java.sql.Connection
 import java.sql.ResultSet
-import java.text.SimpleDateFormat
-import java.time.LocalDateTime
 import java.util.*
 
 class FacilityGatewayImpl(private val connection: Connection) : FacilityGateway {
+
     private val facilitiesTable = "facilities"
     private val tagsTable = "facilityTags"
 
@@ -51,21 +51,29 @@ class FacilityGatewayImpl(private val connection: Connection) : FacilityGateway 
     }
 
     override fun findFacilities(query: FacilitiesQuery): Sequence<Facility> {
-        val find = buildFindStatement(query)
+        val findStr = buildFindStatement(query)
         val statement = connection.createStatement()
-        val res = statement.executeQuery(find)
+        val res = statement.executeQuery(findStr)
         return sequence {
             while (res.next()) {
                 yield(res.toFacility())
             }
         }
     }
-}
+    fun buildGetStatement(id: String): String = "SELECT * from $facilitiesTable WHERE id = '$id'"
 
-data class FindFacilityLine(val id: String, val tag: String, val createdAd: Date)
+    override fun getFacility(id: String): Facility {
+        val getStr = buildGetStatement(id)
+        val statement = connection.createStatement()
+        val res = statement.executeQuery(getStr)
+        if (!res.next()) throw NoSuchFacilityException(id)
+        return res.toFacility()
+    }
+
+}
 
 fun ResultSet.toFacility(): Facility = Facility(
     getString("id"),
-    getString("tags").split(',')
+    getString("tags").split(',').map { it.trim() }.toList()
 )
 

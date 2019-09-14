@@ -34,12 +34,7 @@ class TestFacilityGatewayImpl {
 
     @Test
     fun `assert we can create facilities`() {
-        val facilities = listOf<Facility>(
-            Facility("a", listOf("a", "b", "c")),
-            Facility("b", listOf("a", "d", "c")),
-            Facility("c", listOf("a", "b", "d"))
-        )
-        facilities.forEach { gateway.create(it) }
+        gateway.create(Facility("c", listOf("a", "b", "d")))
     }
 
     @Test
@@ -58,6 +53,21 @@ class TestFacilityGatewayImpl {
         val results = gateway.findFacilities(query)
         val ids = results.map { it.id }.toList()
         Assertions.assertEquals(expected, ids)
+    }
+
+    @Test
+    fun `assert we can get a single facility`() {
+        val facilities = listOf<Facility>(
+            Facility("first", listOf("a", "b", "c")),
+            Facility("second", listOf("a", "d", "c")),
+            Facility("third", listOf("r", "d", "w")),
+            Facility("fourth", listOf("h", "r", "g")),
+            Facility("fifth", listOf("e", "b", "d"))
+        )
+        facilities.forEach { gateway.create(it) }
+
+        val f = gateway.getFacility("third")
+        Assertions.assertEquals(listOf("r", "d", "w"), f.tags)
     }
 
     @AfterEach
