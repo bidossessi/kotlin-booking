@@ -16,24 +16,6 @@ class TestFacilityGatewayImpl {
     val gateway = FacilityGatewayImpl(connection)
 
     @Test
-    fun `correct statements are created from facility`() {
-        val facility = Facility("fake", listOf("a", "b", "c"))
-        val statements = gateway.buildCreateStatements(facility)
-        val firstExpected = "INSERT into facilities (id, tags) VALUES ('fake', 'a, b, c')"
-        Assertions.assertEquals(firstExpected, statements.first)
-        val secondExpected = "INSERT into facilityTags (facilityId, tag) VALUES ('fake', 'a'), ('fake', 'b'), ('fake', 'c')"
-        Assertions.assertEquals(secondExpected, statements.second)
-    }
-
-    @Test
-    fun `correct select statement is created from query`() {
-        val query = FacilitiesQuery(listOf("a", "b", "c"))
-        val actual = gateway.buildFindStatement(query)
-        val expected = "SELECT DISTINCT facilities.* from facilityTags JOIN facilities on facilityTags.facilityId = facilities.id WHERE tag in ('a', 'b', 'c')"
-        Assertions.assertEquals(expected, actual)
-    }
-
-    @Test
     fun `assert we can create facilities`() {
         gateway.create(Facility("c", listOf("a", "b", "d")))
     }
@@ -57,7 +39,16 @@ class TestFacilityGatewayImpl {
     }
 
     @Test
-    fun `assert we can the correct exception`() {
+    fun `what happens if there's nothing to fetch?`() {
+        val query = FacilitiesQuery(listOf("a", "g"))
+        val expected = listOf<String>()
+        val results = gateway.findFacilities(query)
+        val ids = results.map { it.id }.toList()
+        Assertions.assertEquals(expected, ids)
+    }
+
+    @Test
+    fun `make sure we get the correct exception when the facility doesn't exist`() {
         Assertions.assertThrows(NoSuchFacilityException::class.java)  {
             gateway.getFacility("unknown")
         }
