@@ -1,0 +1,5 @@
+rootProject.name = 'booking'
+include "application"
+include "persistence.sqlite"
+include ":api", ":domain"
+
