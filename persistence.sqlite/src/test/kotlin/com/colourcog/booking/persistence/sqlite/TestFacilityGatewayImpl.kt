@@ -1,6 +1,7 @@
 package com.colourcog.booking.persistence.sqlite
 
 import com.colourcog.booking.domain.entity.Facility
+import com.colourcog.booking.domain.errors.NoSuchFacilityException
 import com.colourcog.booking.domain.gateway.FacilitiesQuery
 import com.colourcog.booking.domain.gateway.FacilityGateway
 import com.colourcog.booking.persistence.sqlite.gateway.FacilityGatewayImpl
@@ -53,6 +54,13 @@ class TestFacilityGatewayImpl {
         val results = gateway.findFacilities(query)
         val ids = results.map { it.id }.toList()
         Assertions.assertEquals(expected, ids)
+    }
+
+    @Test
+    fun `assert we can the correct exception`() {
+        Assertions.assertThrows(NoSuchFacilityException::class.java)  {
+            gateway.getFacility("unknown")
+        }
     }
 
     @Test
