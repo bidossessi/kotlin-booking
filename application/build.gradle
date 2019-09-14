@@ -20,11 +20,16 @@ repositories {
     mavenCentral()
 }
 
+test {
+    useJUnitPlatform()
+}
+
 dependencies {
     implementation project(':api')
     implementation project(':domain')
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter', version: '5.5.1'
+    testImplementation group: "io.mockk", name: "mockk", version: '1.9.3'
     implementation group: 'com.github.ajalt', name: 'clikt', version: cliktVersion
 
 }

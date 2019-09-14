@@ -5,7 +5,7 @@ import com.colourcog.booking.domain.entity.Facility
 import com.colourcog.booking.domain.gateway.FacilityGateway
 import com.colourcog.booking.domain.gateway.FacilitiesQuery
 
-class FindFacilitiesImpl(val facilityGateway: FacilityGateway): FindFacilities {
+class FindFacilitiesService(private val facilityGateway: FacilityGateway): FindFacilities {
     override fun find(request: FindFacilities.Request): FindFacilities.Response {
         val results = facilityGateway.findFacilities(FacilitiesQuery(request.tags)).map { it.toResponse() }
         return FindFacilities.Response(results)
