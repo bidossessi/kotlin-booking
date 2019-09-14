@@ -14,27 +14,21 @@ class FacilityGatewayImpl(private val connection: Connection) : FacilityGateway 
     private val tagsTable = "facilityTags"
 
     init {
-        val facilitiesInit = "CREATE TABLE IF NOT EXISTS $facilitiesTable (id string PRIMARY KEY, tags string, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)"
+        val facilitiesInit =
+            "CREATE TABLE IF NOT EXISTS $facilitiesTable (id string PRIMARY KEY, tags string, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)"
         val tagsInit = "CREATE TABLE IF NOT EXISTS $tagsTable (facilityId string KEY, tag string)"
-        val facilityCheck = "SELECT name FROM sqlite_master WHERE type='table' AND name='$facilitiesTable'"
-        val tagCheck = "SELECT name FROM sqlite_master WHERE type='table' AND name='$tagsTable'"
 
         val statement = connection.createStatement()
-
-        val facilityRs = statement.executeQuery(facilityCheck)
-        if (!facilityRs.next()) {
-            statement.execute(facilitiesInit)
-        }
-        val tagRs = statement.executeQuery(tagCheck)
-        if (!tagRs.next()) {
-            statement.execute(tagsInit)
-        }
+        statement.execute(facilitiesInit)
+        statement.execute(tagsInit)
     }
 
     private fun buildCreateStatements(facility: Facility): Pair<String, String> {
-        val facilityStr = "INSERT into $facilitiesTable (id, tags) VALUES ('${facility.id}', '${facility.tags.joinToString()}')"
-        val tagStr = "INSERT into $tagsTable (facilityId, tag) VALUES ${facility.tags.joinToString { "('${facility.id}', '$it')" }}"
-        return Pair(facilityStr,tagStr)
+        val facilityStr =
+            "INSERT into $facilitiesTable (id, tags) VALUES ('${facility.id}', '${facility.tags.joinToString()}')"
+        val tagStr =
+            "INSERT into $tagsTable (facilityId, tag) VALUES ${facility.tags.joinToString { "('${facility.id}', '$it')" }}"
+        return Pair(facilityStr, tagStr)
     }
 
     override fun create(facility: Facility): String {
@@ -47,8 +41,11 @@ class FacilityGatewayImpl(private val connection: Connection) : FacilityGateway 
 
 
     private fun buildFindStatement(query: FacilitiesQuery): String {
-        val tags = query.tags.joinToString(prefix = "(", postfix = ")") { "'$it'" }
-        return "SELECT DISTINCT ${facilitiesTable}.* from $tagsTable JOIN $facilitiesTable on ${tagsTable}.facilityId = ${facilitiesTable}.id WHERE tag in $tags"
+        return """
+            SELECT DISTINCT ${facilitiesTable}.* from $tagsTable 
+            JOIN $facilitiesTable on ${tagsTable}.facilityId = ${facilitiesTable}.id 
+            WHERE tag in ${query.tags.joinToString(prefix = "(", postfix = ")") { "'$it'" }}
+        """.trimIndent()
     }
 
     override fun findFacilities(query: FacilitiesQuery): Sequence<Facility> {
@@ -61,6 +58,7 @@ class FacilityGatewayImpl(private val connection: Connection) : FacilityGateway 
             }
         }
     }
+
     private fun buildGetStatement(id: String): String = "SELECT * from $facilitiesTable WHERE id = '$id'"
 
     override fun getFacility(id: String): Facility {

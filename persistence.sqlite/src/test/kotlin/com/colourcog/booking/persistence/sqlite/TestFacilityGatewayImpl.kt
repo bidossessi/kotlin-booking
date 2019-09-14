@@ -3,12 +3,11 @@ package com.colourcog.booking.persistence.sqlite
 import com.colourcog.booking.domain.entity.Facility
 import com.colourcog.booking.domain.errors.NoSuchFacilityException
 import com.colourcog.booking.domain.gateway.FacilitiesQuery
-import com.colourcog.booking.domain.gateway.FacilityGateway
 import com.colourcog.booking.persistence.sqlite.gateway.FacilityGatewayImpl
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.sql.DriverManager
+
 
 class TestFacilityGatewayImpl {
 
@@ -17,7 +16,7 @@ class TestFacilityGatewayImpl {
 
     @Test
     fun `assert we can create facilities`() {
-        gateway.create(Facility("c", listOf("a", "b", "d")))
+        gateway.create(Facility("c", listOf("fee", "fi", "fo")))
     }
 
     @Test
@@ -32,19 +31,17 @@ class TestFacilityGatewayImpl {
         facilities.forEach { gateway.create(it) }
 
         val query = FacilitiesQuery(listOf("a", "g"))
-        val expected = listOf<String>("first", "second", "fourth")
         val results = gateway.findFacilities(query)
+        val expected = listOf<String>("first", "second", "fourth")
         val ids = results.map { it.id }.toList()
         Assertions.assertEquals(expected, ids)
     }
 
     @Test
-    fun `what happens if there's nothing to fetch?`() {
-        val query = FacilitiesQuery(listOf("a", "g"))
-        val expected = listOf<String>()
+    fun `a query with no matches returns an empty sequence`() {
+        val query = FacilitiesQuery(listOf("q", "m"))
         val results = gateway.findFacilities(query)
-        val ids = results.map { it.id }.toList()
-        Assertions.assertEquals(expected, ids)
+        Assertions.assertEquals(0, results.count())
     }
 
     @Test
@@ -64,13 +61,7 @@ class TestFacilityGatewayImpl {
             Facility("fifth", listOf("e", "b", "d"))
         )
         facilities.forEach { gateway.create(it) }
-
         val f = gateway.getFacility("third")
         Assertions.assertEquals(listOf("r", "d", "w"), f.tags)
-    }
-
-    @AfterEach
-    fun tearDown() {
-        connection.close()
     }
 }

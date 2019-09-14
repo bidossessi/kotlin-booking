@@ -8,4 +8,3 @@ interface FacilityGateway {
     fun create(facility: Facility): String
 }
 
-data class FacilitiesQuery(val tags: List<String>)
