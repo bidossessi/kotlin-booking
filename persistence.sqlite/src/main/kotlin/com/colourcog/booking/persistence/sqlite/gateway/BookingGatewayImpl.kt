@@ -1,17 +1,14 @@
 package com.colourcog.booking.persistence.sqlite.gateway
 
-import com.colourcog.booking.domain.entity.Booking
-import com.colourcog.booking.domain.entity.Facility
-import com.colourcog.booking.domain.entity.TimeFrame
+import com.colourcog.booking.domain.entities.Booking
+import com.colourcog.booking.domain.entities.TimeFrame
 import com.colourcog.booking.domain.errors.NoSuchBookingException
-import com.colourcog.booking.domain.gateway.BookingGateway
+import com.colourcog.booking.domain.gateways.BookingGateway
 import java.sql.Connection
 import java.sql.ResultSet
-import java.sql.Time
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 class BookingGatewayImpl(private val connection: Connection): BookingGateway {
 

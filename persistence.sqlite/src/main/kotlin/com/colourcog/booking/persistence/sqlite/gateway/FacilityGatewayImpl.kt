@@ -1,12 +1,11 @@
 package com.colourcog.booking.persistence.sqlite.gateway
 
-import com.colourcog.booking.domain.entity.Facility
+import com.colourcog.booking.domain.entities.Facility
 import com.colourcog.booking.domain.errors.NoSuchFacilityException
-import com.colourcog.booking.domain.gateway.FacilitiesQuery
-import com.colourcog.booking.domain.gateway.FacilityGateway
+import com.colourcog.booking.domain.gateways.FacilitiesQuery
+import com.colourcog.booking.domain.gateways.FacilityGateway
 import java.sql.Connection
 import java.sql.ResultSet
-import java.util.*
 
 class FacilityGatewayImpl(private val connection: Connection) : FacilityGateway {
 

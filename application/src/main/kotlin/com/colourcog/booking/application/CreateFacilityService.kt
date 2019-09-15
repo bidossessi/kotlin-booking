@@ -1,8 +1,8 @@
 package com.colourcog.booking.application
 
 import com.colourcog.booking.api.CreateFacility
-import com.colourcog.booking.domain.entity.Facility
-import com.colourcog.booking.domain.gateway.FacilityGateway
+import com.colourcog.booking.domain.entities.Facility
+import com.colourcog.booking.domain.gateways.FacilityGateway
 import java.util.*
 
 class CreateFacilityService(private val facilityGateway: FacilityGateway) : CreateFacility {

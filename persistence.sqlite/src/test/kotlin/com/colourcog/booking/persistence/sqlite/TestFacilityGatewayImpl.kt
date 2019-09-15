@@ -1,8 +1,8 @@
 package com.colourcog.booking.persistence.sqlite
 
-import com.colourcog.booking.domain.entity.Facility
+import com.colourcog.booking.domain.entities.Facility
 import com.colourcog.booking.domain.errors.NoSuchFacilityException
-import com.colourcog.booking.domain.gateway.FacilitiesQuery
+import com.colourcog.booking.domain.gateways.FacilitiesQuery
 import com.colourcog.booking.persistence.sqlite.gateway.FacilityGatewayImpl
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test

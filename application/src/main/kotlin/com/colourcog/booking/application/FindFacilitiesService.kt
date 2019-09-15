@@ -1,9 +1,9 @@
 package com.colourcog.booking.application
 
 import com.colourcog.booking.api.FindFacilities
-import com.colourcog.booking.domain.entity.Facility
-import com.colourcog.booking.domain.gateway.FacilityGateway
-import com.colourcog.booking.domain.gateway.FacilitiesQuery
+import com.colourcog.booking.domain.entities.Facility
+import com.colourcog.booking.domain.gateways.FacilityGateway
+import com.colourcog.booking.domain.gateways.FacilitiesQuery
 
 class FindFacilitiesService(private val facilityGateway: FacilityGateway): FindFacilities {
     override fun find(request: FindFacilities.Request): FindFacilities.Response {

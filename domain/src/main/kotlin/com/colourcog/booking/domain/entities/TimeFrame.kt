@@ -1,4 +1,4 @@
-package com.colourcog.booking.domain.entity
+package com.colourcog.booking.domain.entities
 
 import java.time.LocalDateTime
 

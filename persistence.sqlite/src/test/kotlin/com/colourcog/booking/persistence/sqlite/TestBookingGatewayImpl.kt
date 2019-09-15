@@ -1,12 +1,11 @@
 package com.colourcog.booking.persistence.sqlite
 
-import com.colourcog.booking.domain.entity.Booking
-import com.colourcog.booking.domain.entity.TimeFrame
+import com.colourcog.booking.domain.entities.Booking
+import com.colourcog.booking.domain.entities.TimeFrame
 import com.colourcog.booking.domain.errors.NoSuchBookingException
 import com.colourcog.booking.persistence.sqlite.gateway.BookingGatewayImpl
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import java.sql.Connection
 import java.sql.DriverManager
 import java.time.LocalDateTime

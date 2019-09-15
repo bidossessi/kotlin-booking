@@ -1,6 +1,6 @@
-package com.colourcog.booking.domain.gateway
+package com.colourcog.booking.domain.gateways
 
-import com.colourcog.booking.domain.entity.Booking
+import com.colourcog.booking.domain.entities.Booking
 
 interface BookingGateway {
     fun create(booking: Booking): String

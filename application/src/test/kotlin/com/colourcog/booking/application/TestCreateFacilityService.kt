@@ -1,7 +1,7 @@
 package com.colourcog.booking.application
 
 import com.colourcog.booking.api.CreateFacility
-import com.colourcog.booking.domain.gateway.FacilityGateway
+import com.colourcog.booking.domain.gateways.FacilityGateway
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

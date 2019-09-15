@@ -1,7 +1,7 @@
 package com.colourcog.booking.application
 
 import com.colourcog.booking.api.FindFacilities
-import com.colourcog.booking.domain.gateway.FacilityGateway
+import com.colourcog.booking.domain.gateways.FacilityGateway
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test

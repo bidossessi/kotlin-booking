@@ -1,12 +1,12 @@
 package com.colourcog.booking.application
 
 import com.colourcog.booking.api.CreateBooking
-import com.colourcog.booking.domain.entity.Booking
-import com.colourcog.booking.domain.entity.TimeFrame
+import com.colourcog.booking.domain.entities.Booking
+import com.colourcog.booking.domain.entities.TimeFrame
 import com.colourcog.booking.domain.errors.InvalidTimeFrameException
 import com.colourcog.booking.domain.errors.UnbookableFacilityException
-import com.colourcog.booking.domain.gateway.BookingGateway
-import com.colourcog.booking.domain.gateway.FacilityGateway
+import com.colourcog.booking.domain.gateways.BookingGateway
+import com.colourcog.booking.domain.gateways.FacilityGateway
 import java.util.*
 
 class CreateBookingService(
