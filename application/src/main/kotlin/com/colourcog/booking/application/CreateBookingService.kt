@@ -48,5 +48,5 @@ fun CreateBooking.Request.toDomain(): Booking =
     )
 
 fun Booking.overlaps(timeFrame: CreateBooking.Request.TimeFrame): Boolean {
-    return this.timeFrame.dateFrom >= timeFrame.toDate && this.timeFrame.dateTo <= timeFrame.fromDate
+    return this.timeFrame.dateFrom <= timeFrame.toDate && this.timeFrame.dateTo >= timeFrame.fromDate
 }
