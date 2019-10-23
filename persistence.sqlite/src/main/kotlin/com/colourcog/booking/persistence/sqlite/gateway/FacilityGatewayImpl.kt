@@ -6,6 +6,7 @@ import com.colourcog.booking.domain.gateways.FacilitiesQuery
 import com.colourcog.booking.domain.gateways.FacilityGateway
 import java.sql.Connection
 import java.sql.ResultSet
+import java.util.*
 
 class FacilityGatewayImpl(private val connection: Connection) : FacilityGateway {
 
@@ -30,12 +31,11 @@ class FacilityGatewayImpl(private val connection: Connection) : FacilityGateway 
         return Pair(facilityStr, tagStr)
     }
 
-    override fun create(facility: Facility): String {
+    override fun create(facility: Facility) {
         val todo = buildCreateStatements(facility)
         val statement = connection.createStatement()
         statement.execute(todo.first)
         statement.execute(todo.second)
-        return facility.id
     }
 
 
@@ -60,18 +60,18 @@ class FacilityGatewayImpl(private val connection: Connection) : FacilityGateway 
 
     private fun buildGetStatement(id: String): String = "SELECT * from $facilitiesTable WHERE id = '$id'"
 
-    override fun getFacility(id: String): Facility {
-        val getStr = buildGetStatement(id)
+    override fun getFacility(id: UUID): Facility {
+        val getStr = buildGetStatement(id.toString())
         val statement = connection.createStatement()
         val res = statement.executeQuery(getStr)
-        if (!res.next()) throw NoSuchFacilityException(id)
+        if (!res.next()) throw NoSuchFacilityException(id.toString())
         return res.toFacility()
     }
 
 }
 
 fun ResultSet.toFacility(): Facility = Facility(
-    getString("id"),
+    UUID.fromString(getString("id")),
     getString("tags").split(',').map { it.trim() }.toList()
 )
 

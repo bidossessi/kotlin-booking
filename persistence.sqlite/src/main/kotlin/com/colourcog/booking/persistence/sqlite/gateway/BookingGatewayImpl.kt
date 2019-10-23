@@ -9,6 +9,7 @@ import java.sql.ResultSet
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import java.util.*
 
 class BookingGatewayImpl(private val connection: Connection): BookingGateway {
 
@@ -44,27 +45,27 @@ class BookingGatewayImpl(private val connection: Connection): BookingGateway {
         """.trimIndent()
     }
 
-    override fun create(booking: Booking): String {
+    override fun create(booking: Booking){
         val createStr = buildCreateStatement(booking)
         val statement = connection.createStatement()
         statement.execute(createStr)
-        return booking.id
     }
 
     private fun buildGetStatement(id: String): String = "SELECT * from $bookingsTable WHERE id = '$id'"
 
-    override fun getBooking(id: String): Booking {
-        val getStr = buildGetStatement(id)
+    override fun getBooking(id: UUID): Booking {
+        val idString = id.toString()
+        val getStr = buildGetStatement(idString)
         val statement = connection.createStatement()
         val res = statement.executeQuery(getStr)
-        if (!res.next()) throw NoSuchBookingException(id)
+        if (!res.next()) throw NoSuchBookingException(idString)
         return res.toBooking()
     }
 
     private fun buildFindStatement(id: String): String = "SELECT * from $bookingsTable WHERE facilityId = '$id'"
 
-    override fun getBookingsForFacility(id: String): Sequence<Booking> {
-        val findStr = buildFindStatement(id)
+    override fun getBookingsForFacility(id: UUID): Sequence<Booking> {
+        val findStr = buildFindStatement(id.toString())
         val statement = connection.createStatement()
         print(findStr)
         val res = statement.executeQuery(findStr)
@@ -87,8 +88,8 @@ fun Pair<Long, Long>.toTimeFrame(): TimeFrame = TimeFrame(
 fun ResultSet.toBooking(): Booking {
     val dtPair = Pair<Long, Long>(getLong("fromDate"), getLong("toDate"))
     return Booking(
-        getString("id"),
-        getString("facilityId"),
+        UUID.fromString(getString("id")),
+        UUID.fromString(getString("facilityId")),
         dtPair.toTimeFrame(),
         getString("tags").split(',').map { it.trim() }.toList()
     )
