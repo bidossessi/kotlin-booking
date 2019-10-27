@@ -3,5 +3,5 @@ package com.colourcog.booking.domain.api
 import java.util.*
 
 interface CreateFacility  {
-    fun create(tags: List<String> = emptyList<String>()): UUID
+    suspend fun action(tags: List<String> = emptyList<String>()): UUID
 }

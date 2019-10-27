@@ -5,6 +5,7 @@ import com.colourcog.booking.domain.entities.TimeFrame
 import com.colourcog.booking.domain.errors.NoSuchBookingException
 import com.colourcog.booking.domain.gateways.BookingGateway
 import java.sql.Connection
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.time.Instant
 import java.time.LocalDateTime
@@ -14,6 +15,10 @@ import java.util.*
 class BookingGatewayImpl(private val connection: Connection): BookingGateway {
 
     private val bookingsTable = "bookings"
+    private val createStmt: PreparedStatement
+    private val getStmt: PreparedStatement
+    private val findByFacilityIdStmt: PreparedStatement
+    private val findBookedStmt: PreparedStatement
 
     init {
         val bookingsInit = """
@@ -30,50 +35,75 @@ class BookingGatewayImpl(private val connection: Connection): BookingGateway {
 
         val statement = connection.createStatement()
         statement.execute(bookingsInit)
+        createStmt = connection.prepareStatement(
+            """
+            INSERT into $bookingsTable (id, facilityId, fromDate, toDate, tags)
+            VALUES (?, ?, ? , ?, ?)
+            """.trimIndent()
+        )
+        getStmt = connection.prepareStatement("SELECT * from $bookingsTable WHERE id = ?")
+        findByFacilityIdStmt = connection.prepareStatement("SELECT * from $bookingsTable WHERE facilityId = ?")
+        findBookedStmt = connection.prepareStatement(
+            """
+            SELECT facilityId FROM $bookingsTable
+            WHERE fromDate <= ?
+            AND toDate >= ?
+            """.trimIndent()
+        )
     }
-    private fun buildCreateStatement(booking: Booking): String {
+
+    override suspend fun create(booking: Booking): Boolean {
         val dtPair = booking.timeFrame.toTimestampPair()
-        return """
-            INSERT into $bookingsTable (id, facilityId, fromDate, toDate, tags) 
-            VALUES (
-                '${booking.id}', 
-                '${booking.facilityId}',
-                ${dtPair.first},
-                ${dtPair.second},
-                '${booking.tags.joinToString()}'
-            )
-        """.trimIndent()
+        createStmt.setString(1, booking.id.toString())
+        createStmt.setString(2, booking.facilityId.toString())
+        createStmt.setLong(3, dtPair.first)
+        createStmt.setLong(4, dtPair.second)
+        createStmt.setString(5, booking.tags.joinToString())
+        createStmt.executeUpdate()
+        return true
     }
 
-    override fun create(booking: Booking){
-        val createStr = buildCreateStatement(booking)
-        val statement = connection.createStatement()
-        statement.execute(createStr)
+    override suspend fun create(bookings: List<Booking>): Boolean {
+        for (booking in bookings) {
+            val dtPair = booking.timeFrame.toTimestampPair()
+            createStmt.setString(1, booking.id.toString())
+            createStmt.setString(2, booking.facilityId.toString())
+            createStmt.setLong(3, dtPair.first)
+            createStmt.setLong(4, dtPair.second)
+            createStmt.setString(5, booking.tags.joinToString())
+            createStmt.addBatch()
+        }
+        createStmt.executeBatch()
+        return true
     }
 
-    private fun buildGetStatement(id: String): String = "SELECT * from $bookingsTable WHERE id = '$id'"
-
-    override fun getBooking(id: UUID): Booking {
+    override suspend fun getBooking(id: UUID): Booking {
         val idString = id.toString()
-        val getStr = buildGetStatement(idString)
-        val statement = connection.createStatement()
-        val res = statement.executeQuery(getStr)
+        getStmt.setString(1, id.toString())
+        val res = getStmt.executeQuery()
         if (!res.next()) throw NoSuchBookingException(idString)
         return res.toBooking()
     }
 
-    private fun buildFindStatement(id: String): String = "SELECT * from $bookingsTable WHERE facilityId = '$id'"
-
-    override fun getBookingsForFacility(id: UUID): Sequence<Booking> {
-        val findStr = buildFindStatement(id.toString())
-        val statement = connection.createStatement()
-        print(findStr)
-        val res = statement.executeQuery(findStr)
+    override suspend fun getBookingsForFacility(id: UUID): Sequence<Booking> {
+        findByFacilityIdStmt.setString(1, id.toString())
+        val res = findByFacilityIdStmt.executeQuery()
         return sequence {
             while (res.next()) {
                 yield(res.toBooking())
             }
         }
+    }
+    override suspend fun getBookedFacilityIds(timeFrame: TimeFrame): List<UUID> {
+        val dtPair = timeFrame.toTimestampPair()
+        findBookedStmt.setLong(1, dtPair.first)
+        findBookedStmt.setLong(2, dtPair.second)
+        val res = getStmt.executeQuery()
+        return sequence {
+            while (res.next()) {
+                yield(UUID.fromString(res.getString("facilityId")))
+            }
+        }.toList()
     }
 }
 

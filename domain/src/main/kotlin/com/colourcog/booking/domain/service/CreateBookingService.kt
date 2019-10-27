@@ -15,16 +15,16 @@ class CreateBookingService(
     private val facilityGateway: FacilityGateway,
     private val bookingGateway: BookingGateway
 ) : CreateBooking {
-    override fun create(facilityId: UUID, timeFrame: TimeFrame, tags: List<String>): UUID {
+    override suspend fun action(facilityId: UUID, timeFrame: TimeFrame, tags: List<String>): UUID {
         val facility = facilityGateway.getFacility(facilityId)
         checkDateThreshold(timeFrame)
         checkUnavailable(facility, timeFrame)
         val booking = Booking(UUID.randomUUID(), facility.id, timeFrame, tags)
-        bookingGateway.create(booking)
+        bookingGateway.create(booking = booking)
         return booking.id
     }
 
-    private fun checkUnavailable(facility: Facility, timeFrame: TimeFrame) {
+    private suspend fun checkUnavailable(facility: Facility, timeFrame: TimeFrame) {
         val matches = bookingGateway.getBookingsForFacility(facility.id)
         if (matches.any { it.timeFrame.overlaps(timeFrame) }) {
             throw UnavailableFacilityException(facility.id.toString())

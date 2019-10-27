@@ -4,5 +4,5 @@ import com.colourcog.booking.domain.entities.TimeFrame
 import java.util.*
 
 interface CreateBooking {
-    fun create(facilityId: UUID, timeFrame: TimeFrame, tags: List<String> = emptyList<String>()): UUID
+    suspend fun action(facilityId: UUID, timeFrame: TimeFrame, tags: List<String> = emptyList<String>()): UUID
 }

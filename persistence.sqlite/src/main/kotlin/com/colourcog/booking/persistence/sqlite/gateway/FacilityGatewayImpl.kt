@@ -2,9 +2,9 @@ package com.colourcog.booking.persistence.sqlite.gateway
 
 import com.colourcog.booking.domain.entities.Facility
 import com.colourcog.booking.domain.errors.NoSuchFacilityException
-import com.colourcog.booking.domain.gateways.FacilitiesQuery
 import com.colourcog.booking.domain.gateways.FacilityGateway
 import java.sql.Connection
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.util.*
 
@@ -12,43 +12,77 @@ class FacilityGatewayImpl(private val connection: Connection) : FacilityGateway 
 
     private val facilitiesTable = "facilities"
     private val tagsTable = "facilityTags"
+    private val createStmt: PreparedStatement
+    private val createTagStmt: PreparedStatement
+    private val getStmt: PreparedStatement
 
     init {
         val facilitiesInit =
-            "CREATE TABLE IF NOT EXISTS $facilitiesTable (id string PRIMARY KEY, tags string, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)"
+            """
+            CREATE TABLE IF NOT EXISTS $facilitiesTable (id string PRIMARY KEY, tags string, createdAt DATETIME DEFAULT CURRENT_TIMESTAMP)
+            """.trimIndent()
         val tagsInit = "CREATE TABLE IF NOT EXISTS $tagsTable (facilityId string KEY, tag string)"
 
         val statement = connection.createStatement()
         statement.execute(facilitiesInit)
         statement.execute(tagsInit)
+        getStmt = connection.prepareStatement("SELECT * from $facilitiesTable WHERE id = ?")
+        createStmt = connection.prepareStatement("INSERT into $facilitiesTable (id, tags) VALUES (?, ?)")
+        createTagStmt = connection.prepareStatement("INSERT into $tagsTable (facilityId, tag) VALUES (?, ?)")
     }
 
-    private fun buildCreateStatements(facility: Facility): Pair<String, String> {
-        val facilityStr =
-            "INSERT into $facilitiesTable (id, tags) VALUES ('${facility.id}', '${facility.tags.joinToString()}')"
-        val tagStr =
-            "INSERT into $tagsTable (facilityId, tag) VALUES ${facility.tags.joinToString { "('${facility.id}', '$it')" }}"
-        return Pair(facilityStr, tagStr)
+    override suspend fun create(facility: Facility): Boolean {
+        createStmt.setString(1, facility.id.toString())
+        createStmt.setString(2, facility.tags.joinToString())
+        createStmt.executeUpdate()
+        for (tag in facility.tags) {
+            createTagStmt.setString(1, facility.id.toString())
+            createTagStmt.setString(2, tag)
+            createTagStmt.addBatch()
+        }
+        createTagStmt.executeBatch()
+        return true
     }
 
-    override fun create(facility: Facility) {
-        val todo = buildCreateStatements(facility)
-        val statement = connection.createStatement()
-        statement.execute(todo.first)
-        statement.execute(todo.second)
+    override suspend fun create(facilities: List<Facility>): Boolean {
+        for (facility in facilities) {
+            createStmt.setString(1, facility.id.toString())
+            createStmt.setString(2, facility.tags.joinToString())
+            createStmt.addBatch()
+            for (tag in facility.tags) {
+                createTagStmt.setString(1, facility.id.toString())
+                createTagStmt.setString(2, tag)
+                createTagStmt.addBatch()
+            }
+        }
+        createStmt.executeBatch()
+        createTagStmt.executeBatch()
+        return true
     }
 
+    private fun buildFindStatement(including: List<UUID>?, excluding: List<UUID>?, tags: List<String>?): String {
+        val tagsLine = tags?.let {
+            "AND tag IN ${ it.joinToString(prefix = "(", postfix = ")") { x: String -> "'$x'" } }"
+        } ?: ""
+        val includeLine = including?.let {
+            "AND id IN ${it.joinToString(prefix = "(", postfix = ")") { x: UUID -> "'$x'" }}"
+        } ?: ""
+        val excludeLine = excluding?.let {
+            "AND id NOT IN ${it.joinToString(prefix = "(", postfix = ")") { x: UUID -> "'$x'" }}"
+        } ?: ""
 
-    private fun buildFindStatement(query: FacilitiesQuery): String {
         return """
             SELECT DISTINCT ${facilitiesTable}.* from $tagsTable 
             JOIN $facilitiesTable on ${tagsTable}.facilityId = ${facilitiesTable}.id 
-            WHERE tag in ${query.tags.joinToString(prefix = "(", postfix = ")") { "'$it'" }}
+            WHERE 1
+            $tagsLine
+            $includeLine
+            $excludeLine
         """.trimIndent()
     }
 
-    override fun findFacilities(query: FacilitiesQuery): Sequence<Facility> {
-        val findStr = buildFindStatement(query)
+    override suspend fun find(including: List<UUID>?, excluding: List<UUID>?, tags: List<String>?): Sequence<Facility> {
+        val findStr = buildFindStatement(including, excluding, tags)
         val statement = connection.createStatement()
         val res = statement.executeQuery(findStr)
         return sequence {
@@ -58,12 +92,9 @@ class FacilityGatewayImpl(private val connection: Connection) : FacilityGateway 
         }
     }
 
-    private fun buildGetStatement(id: String): String = "SELECT * from $facilitiesTable WHERE id = '$id'"
-
-    override fun getFacility(id: UUID): Facility {
-        val getStr = buildGetStatement(id.toString())
-        val statement = connection.createStatement()
-        val res = statement.executeQuery(getStr)
+    override suspend fun getFacility(id: UUID): Facility {
+        getStmt.setString(1, id.toString())
+        val res = getStmt.executeQuery()
         if (!res.next()) throw NoSuchFacilityException(id.toString())
         return res.toFacility()
     }

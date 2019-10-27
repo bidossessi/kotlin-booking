@@ -4,8 +4,14 @@ import com.colourcog.booking.domain.entities.Facility
 import java.util.*
 
 interface FacilityGateway {
-    fun findFacilities(query: FacilitiesQuery): Sequence<Facility>
-    fun getFacility(id: UUID): Facility
-    fun create(facility: Facility): Unit
+    suspend fun create(facility: Facility): Boolean
+    suspend fun create(facilities: List<Facility>): Boolean
+    suspend fun getFacility(id: UUID): Facility
+    suspend fun find(
+        including: List<UUID>? = null,
+        excluding: List<UUID>? = null,
+        tags: List<String>? = null
+    ): Sequence<Facility>
+
 }
 
